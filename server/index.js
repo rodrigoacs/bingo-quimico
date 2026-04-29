@@ -84,11 +84,22 @@ const generatePlayerCard = () => {
 io.on('connection', (socket) => {
   console.log(`Cliente conectado: ${socket.id}`)
 
-  socket.on('create_room', (roomId) => {
+  // Localize este trecho no seu server/index.js:
+  socket.on('create_room', (data) => {
+    const { roomId, senha } = data
+
+    const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD
+
+    if (senha !== TEACHER_PASSWORD) {
+      socket.emit('error', 'Senha incorreta! Acesso negado para criar sala.')
+      return
+    }
+
     if (rooms[roomId]) {
       socket.emit('error', 'Sala já existe')
       return
     }
+
     const drawPile = createPatternDeck()
     rooms[roomId] = {
       id: roomId,
@@ -98,6 +109,7 @@ io.on('connection', (socket) => {
       currentData: null,
       players: []
     }
+
     socket.join(roomId)
     socket.emit('room_created', { roomId })
   })
@@ -178,7 +190,25 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('disconnect', () => { })
+  socket.on('disconnect', () => {
+    for (const roomId in rooms) {
+      const room = rooms[roomId]
+
+      if (room.hostId === socket.id) {
+        io.to(roomId).emit('error', 'O professor foi desconectado. A sala foi encerrada.')
+        delete rooms[roomId]
+        console.log(`Sala ${roomId} destruída.`)
+        return
+      }
+
+      const playerIndex = room.players.findIndex(p => p.id === socket.id)
+      if (playerIndex !== -1) {
+        const player = room.players[playerIndex]
+        room.players.splice(playerIndex, 1)
+        console.log(`Aluno ${player.name} saiu da sala ${roomId}`)
+      }
+    }
+  })
 })
 
 httpServer.listen(PORT, '0.0.0.0', () => {

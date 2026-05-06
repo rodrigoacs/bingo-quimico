@@ -1,5 +1,4 @@
 import express from 'express'
-import { createServer } from 'node:http'
 import { Server } from 'socket.io'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -14,8 +13,16 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-const httpServer = createServer(app)
-const io = new Server(httpServer, {
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${PORT}`)
+})
+
+app.get('/ping', (req, res) => {
+  console.log('Ping recebido de ', req.ip)
+  res.send('pong')
+})
+
+const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
@@ -38,11 +45,11 @@ const loadElementsData = () => {
     return lines.map(line => {
       const values = line.split(',')
       return {
-        simbolo: values[0].trim(),
-        numeroAtomico: parseInt(values[1].trim()),
-        nome: values[2].trim(),
-        dica: values[3].trim(),
-        grupo: values[4].trim()
+        symbol: values[0].trim(),
+        atomicNumber: parseInt(values[1].trim()),
+        name: values[2].trim(),
+        hint: values[3].trim(),
+        group: values[4].trim()
       }
     })
   } catch (error) {
@@ -63,9 +70,9 @@ const shuffle = (array) => {
 }
 
 const createPatternDeck = () => {
-  const g1 = shuffle(allElements.filter(e => e.grupo === '1'))
-  const g2 = shuffle(allElements.filter(e => e.grupo === '2'))
-  const g3 = shuffle(allElements.filter(e => e.grupo === '3'))
+  const g1 = shuffle(allElements.filter(e => e.group === '1'))
+  const g2 = shuffle(allElements.filter(e => e.group === '2'))
+  const g3 = shuffle(allElements.filter(e => e.group === '3'))
   let orderedDeck = []
   while (g1.length > 0 || g2.length > 0 || g3.length > 0) {
     orderedDeck.push(...g1.splice(0, 5))
@@ -84,13 +91,12 @@ const generatePlayerCard = () => {
 io.on('connection', (socket) => {
   console.log(`Cliente conectado: ${socket.id}`)
 
-  // Localize este trecho no seu server/index.js:
   socket.on('create_room', (data) => {
-    const { roomId, senha } = data
+    const { roomId, password } = data
 
     const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD
 
-    if (senha !== TEACHER_PASSWORD) {
+    if (password !== TEACHER_PASSWORD) {
       socket.emit('error', 'Senha incorreta! Acesso negado para criar sala.')
       return
     }
@@ -127,7 +133,7 @@ io.on('connection', (socket) => {
     socket.emit('joined_success', { roomId, card: playerCard })
     io.to(room.hostId).emit('player_joined', player)
     if (room.currentData) {
-      socket.emit('new_hint', room.currentData.dica)
+      socket.emit('new_hint', room.currentData.hint)
     }
   })
 
@@ -141,13 +147,12 @@ io.on('connection', (socket) => {
     const nextElement = room.drawPile.pop()
     room.drawnElements.push(nextElement)
     room.currentData = nextElement
-    io.to(roomId).emit('new_hint', nextElement.dica)
+    io.to(roomId).emit('new_hint', nextElement.hint)
 
-    // ATUALIZAÇÃO: Envia também o histórico (drawnElements)
     socket.emit('host_update', {
       currentElement: nextElement,
       remaining: room.drawPile.length,
-      drawnElements: room.drawnElements // <--- NOVO
+      drawnElements: room.drawnElements
     })
   })
 
@@ -171,7 +176,7 @@ io.on('connection', (socket) => {
       }
 
       const allMarkedAreDrawn = markedItems.every(playerItem =>
-        room.drawnElements.some(drawnItem => drawnItem.simbolo === playerItem.simbolo)
+        room.drawnElements.some(drawnItem => drawnItem.symbol === playerItem.symbol)
       )
 
       if (allMarkedAreDrawn) {
@@ -209,8 +214,4 @@ io.on('connection', (socket) => {
       }
     }
   })
-})
-
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${PORT}`)
 })

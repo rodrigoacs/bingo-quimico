@@ -9,6 +9,7 @@ const view = ref('login')
 // Login
 const roomCode = ref('')
 const playerName = ref('')
+const teacherPassword = ref('')
 
 // Jogo
 const currentHint = ref('')
@@ -95,20 +96,17 @@ const connect = () => {
 
 // --- Ações ---
 const createRoom = () => {
-  if (!roomCode.value) {
-    return showModal('Atenção', 'Digite o nome da sala.', 'error')
-  }
-
-  const senhaInformada = prompt("Restrito: Digite a senha do Professor:")
-
-  if (!senhaInformada) return
+  if (!roomCode.value) return showModal('Atenção', 'Digite o nome da sala.', 'error')
+  if (!teacherPassword.value) return showModal('Atenção', 'A senha do professor é obrigatória.', 'error') // <--- NOVA VALIDAÇÃO
 
   if (!socket.value) connect()
 
-  setTimeout(() => socket.value.emit('create_room', {
-    roomId: roomCode.value,
-    senha: senhaInformada
-  }), 100)
+  setTimeout(() => {
+    socket.value.emit('create_room', {
+      roomId: roomCode.value,
+      password: teacherPassword.value
+    })
+  }, 100)
 }
 
 const joinRoom = () => {
@@ -215,6 +213,12 @@ const toggleMark = (index) => {
           </div>
           <div class="divider">ou</div>
           <div class="action-col teacher-col">
+            <input
+              v-model="teacherPassword"
+              type="password"
+              placeholder="Senha do Professor"
+              class="input-lg"
+            />
             <button
               @click="createRoom"
               class="btn btn-outline btn-block"

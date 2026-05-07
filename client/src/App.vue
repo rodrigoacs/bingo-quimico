@@ -247,10 +247,10 @@ const toggleMark = (index) => {
                 v-if="hostData.currentElement"
                 class="element-card giant"
               >
-                <span class="atomic-number">{{ hostData.currentElement.numeroAtomico }}</span>
-                <span class="symbol">{{ hostData.currentElement.simbolo }}</span>
-                <span class="name">{{ hostData.currentElement.nome }}</span>
-                <div class="group-badge">Grupo {{ hostData.currentElement.grupo }}</div>
+                <span class="atomic-number">{{ hostData.currentElement.atomicNumber }}</span>
+                <span class="symbol">{{ hostData.currentElement.symbol }}</span>
+                <span class="name">{{ hostData.currentElement.name }}</span>
+                <div class="group-badge">Grupo {{ hostData.currentElement.group }}</div>
               </div>
               <div
                 v-else
@@ -265,7 +265,7 @@ const toggleMark = (index) => {
               class="hint-box-fixed"
             >
               <strong>Dica:</strong>
-              <p>{{ hostData.currentElement.dica }}</p>
+              <p>{{ hostData.currentElement.hint }}</p>
             </div>
 
             <button
@@ -302,11 +302,11 @@ const toggleMark = (index) => {
                 <div class="history-grid">
                   <div
                     v-for="el in hostData.drawnElements.slice().reverse()"
-                    :key="el.simbolo"
+                    :key="el.symbol"
                     class="history-badge"
                   >
-                    <span class="h-symbol">{{ el.simbolo }}</span>
-                    <span class="h-number">{{ el.numeroAtomico }}</span>
+                    <span class="h-symbol">{{ el.symbol }}</span>
+                    <span class="h-number">{{ el.atomicNumber }}</span>
                   </div>
                   <div
                     v-if="hostData.drawnElements.length === 0"
@@ -349,13 +349,13 @@ const toggleMark = (index) => {
             <div class="bingo-grid fixed-grid">
               <div
                 v-for="(cell, index) in bingoCard"
-                :key="cell.simbolo"
+                :key="cell.symbol"
                 class="bingo-cell"
                 :class="{ marked: cell.marked }"
                 @click="toggleMark(index)"
               >
                 <div class="cell-inner">
-                  <span class="cell-symbol">{{ cell.simbolo }}</span>
+                  <span class="cell-symbol">{{ cell.symbol }}</span>
                 </div>
               </div>
             </div>

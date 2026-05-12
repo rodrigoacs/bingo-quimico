@@ -189,7 +189,7 @@ const toggleMark = (index) => {
       >
         <div class="login-header">
           <div class="icon-flask">&#x2697;&#xFE0F;</div>
-          <h1>Bingo Quimico</h1>
+          <h1>Bingo Periódico </h1>
         </div>
         <div class="input-group">
           <label>Nome da Sala</label>
@@ -337,13 +337,13 @@ const toggleMark = (index) => {
         </header>
 
         <main class="student-main">
-          <div
+          <!-- <div
             class="hint-box-fixed student-hint"
             :class="{ 'updated': currentHint }"
           >
             <span class="hint-label">DICA DO MESTRE</span>
             <p class="hint-text">{{ currentHint || "Aguardando..." }}</p>
-          </div>
+          </div> -->
 
           <div class="bingo-area">
             <div class="bingo-grid fixed-grid">
